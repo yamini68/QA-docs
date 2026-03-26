@@ -1,0 +1,11 @@
+Rohit Duggal 
+Q1 - HR Flow View Access
+In the HR Flow, where HR applies a request on behalf of an employee —there is no  listing view to track all requests raised by them on behalf of employees so when will it be released this view ?
+ 
+Q2 -  Cancellation N2A Notification
+When a cancellation is performed after approval - whether by the employee, manager, or HR - should a N2A notification be triggered to the relevant reporting manager or HR,  For example, if an employee cancels an approved leave request, should the manager receive an alert about the cancellation? Please confirm if this notification is required ?
+ 
+ 
+Q1- will be starting work on view manager shortly 
+Q2 - workflow setup is not currently available once this is enabled any such notification can be setup 
+ 

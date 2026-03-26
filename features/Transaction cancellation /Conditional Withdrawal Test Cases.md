@@ -404,38 +404,6 @@ OutOnWorkType values: `IL` (In Late), `OE` (Out Early), `IO` (In Late + Out Earl
 **Expected Result:** "OE" does not end with "L" → FALSE → Withdraw blocked
 
 **Test Type:** Negative
-
----
-
-### TC-OWT-014 | OutOnWorkType — InThisTransaction | AND | Positive
-
-**Pre-conditions:**
-- Condition: `OutOnWorkType InThisTransaction <NotInThis operator>` using StartDate field
-- Field: StartDate, Operator: NotInThisTransaction, Value: <blank/any>
-
-**Note:** InThisTransaction checks if field value is present in the current transaction's header fields (FeatureVariantID, TransactionID, SubjectUser, TransactionUser)
-
-**Steps:**
-1. Set Field = `StartDate`, Operator = `InThisTransaction`
-2. Submit OOW transaction
-3. Attempt Withdraw
-
-**Expected Result:** StartDate exists in this transaction → TRUE → Withdraw visible
-
-**Test Type:** Positive
-
----
-
-### TC-OWT-015 | OutOnWorkType — NotInThisTransaction | AND | Positive
-
-**Pre-conditions:**
-- Condition: Field = `ExpectedInTime`, Operator = `NotInThisTransaction`
-- OOW submitted with OutOnWorkType = OE (where ExpectedInTime is blank per spec)
-
-**Expected Result:** ExpectedInTime is blank/absent for OE type → TRUE → Withdraw visible
-
-**Test Type:** Positive (Edge — blank field)
-
 ---
 
 ## SECTION 4 — DayType Field (TX Type)

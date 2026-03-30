@@ -175,6 +175,7 @@ Expected at Year-End:
 
 ---
 
+
 ## 📋 Quick Test Data Table
 
 | Test Case | Natural Accrual | HR Adjustment | Total Added | Availed | Unused | Expected Lapse | Expected Carry |
@@ -192,6 +193,7 @@ TC3 → DOJ: Jan 1, 2026 | Code: +69
 TC4 → DOJ: Jan 1, 2026 | Code: +70  
 TC5 → DOJ: Jan 1, 2026 | Code: +71  
 TC6 → DOJ: Jan 1, 2026 | Code: +72
+
 ---
 
 ## 🛠️ Step-by-Step Execution

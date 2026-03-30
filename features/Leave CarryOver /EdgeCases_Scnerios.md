@@ -188,6 +188,344 @@ Based on the **Leave Yearend Manager** and **Leave Carryover** specs, here are t
 
 ---
 
+# 🎯 Leave Carryover Policy - Edge Case Configurations
+
+Based on the **Leave Yearend Manager Spec (Page 4-5)**, here's what happens in each scenario:
+
+---
+
+## 📋 Key Distinction: Blank vs Zero (0)
+
+| Value | Meaning |
+|-------|---------|
+| **Blank** | Rule does **NOT apply** (ignore this rule completely) |
+| **Zero (0)** | Rule **DOES apply** and limit is 0 → **ALL leaves lapse/encash, nothing carries** |
+
+> ⚠️ **This is critical!** Blank ≠ 0
+
+---
+
+## 🧪 Scenario 1: Both Fields BLANK + Toggle OFF
+
+```
+Configuration:
+├─ FullCarryover Toggle: OFF (Disabled)
+├─ Total Leave Balance: [BLANK]
+├─ Current Year Leaves: [BLANK]
+```
+
+### **What Happens:**
+```
+Per Spec (Page 4-5):
+→ "A blank indicates that this rule does not apply"
+→ Both rules are IGNORED
+→ No carryover limits defined
+```
+
+### **Result:**
+| Employee Balance | Lapsed | Encashed | Carryover |
+|-----------------|--------|----------|-----------|
+| 10 leaves | 0 | 0 | 10 |
+| 50 leaves | 0 | 0 | 50 |
+| 100 leaves | 0 | 0 | 100 |
+
+### **⚠️ Issue:**
+```
+This is a MISCONFIGURATION!
+- Toggle is OFF (meaning limits should apply)
+- But both limits are BLANK (meaning no limits apply)
+- System behavior is UNCLEAR/UNDEFINED
+```
+
+### **Expected System Behavior:**
+```
+Option A: System treats as FullCarryover = E (all carry)
+Option B: System throws validation error (should not allow save)
+Option C: System defaults to some hardcoded limit
+```
+
+### **✅ Test Case:**
+```
+TC-CONFIG-01: Both Fields Blank + Toggle OFF
+Setup:
+- FullCarryover: D
+- TotalBalance: [blank]
+- CurrentYearCarryover: [blank]
+- Employee Unused: 50 leaves
+
+Expected:
+⚠️ System should either:
+  1. Show validation error (prevent save)
+  2. OR treat as FullCarryover = E (all 50 carry)
+
+Verify:
+□ Does system allow saving this config?
+□ What happens at year-end?
+□ Is there a default behavior?
+```
+
+---
+
+## 🧪 Scenario 2: Both Fields = 0
+
+```
+Configuration:
+├─ FullCarryover Toggle: OFF (Disabled)
+├─ Total Leave Balance: 0
+├─ Current Year Leaves: 0
+├─ Action: Lapsed (for both)
+```
+
+### **What Happens:**
+```
+Per Spec (Page 5):
+→ "A zero indicates that the leave balance will either lapse or get encashed"
+→ BOTH rules apply with limit = 0
+→ ALL leaves should lapse/encash, NOTHING carries forward
+```
+
+### **Result:**
+| Employee Balance | Lapsed | Encashed | Carryover |
+|-----------------|--------|----------|-----------|
+| 10 leaves | 10 | 0 | **0** |
+| 50 leaves | 50 | 0 | **0** |
+| 100 leaves | 100 | 0 | **0** |
+
+### **✅ Test Case:**
+```
+TC-CONFIG-02: Both Fields = 0
+Setup:
+- FullCarryover: D
+- TotalBalance: 0, Action: L
+- CurrentYearCarryover: 0, Action: L
+- Employee Unused: 50 leaves
+
+Expected:
+✓ LeaveYearLeavesLapsed: 50
+✓ CarryoverBalance: 0
+✓ Nothing carries to next year
+
+Use Case:
+- Leave types that should NOT carry forward (e.g., Compensatory Off)
+- "Use it or lose it" policy
+```
+
+---
+
+## 🧪 Scenario 3: Total Balance = 0, Current Year = BLANK
+
+```
+Configuration:
+├─ FullCarryover Toggle: OFF (Disabled)
+├─ Total Leave Balance: 0
+├─ Current Year Leaves: [BLANK]
+├─ Action: Lapsed
+```
+
+### **What Happens:**
+```
+Per Spec:
+→ TotalBalance = 0 → Rule APPLIES, limit is 0
+→ CurrentYearCarryover = BLANK → Rule does NOT apply
+→ Only TotalBalance rule is evaluated
+```
+
+### **Result:**
+| Employee Balance | Lapsed | Encashed | Carryover |
+|-----------------|--------|----------|-----------|
+| 10 leaves | 10 | 0 | **0** |
+| 50 leaves | 50 | 0 | **0** |
+| 100 leaves | 100 | 0 | **0** |
+
+### **✅ Test Case:**
+```
+TC-CONFIG-03: TotalBalance = 0, CurrentYear = Blank
+Setup:
+- FullCarryover: D
+- TotalBalance: 0, Action: L
+- CurrentYearCarryover: [blank]
+- Employee Unused: 50 leaves
+
+Expected:
+✓ LeaveYearLeavesLapsed: 50
+✓ CarryoverBalance: 0
+✓ CurrentYear rule ignored (blank)
+```
+
+---
+
+## 🧪 Scenario 4: Total Balance = BLANK, Current Year = 0
+
+```
+Configuration:
+├─ FullCarryover Toggle: OFF (Disabled)
+├─ Total Leave Balance: [BLANK]
+├─ Current Year Leaves: 0
+├─ Action: Lapsed
+```
+
+### **What Happens:**
+```
+Per Spec:
+→ TotalBalance = BLANK → Rule does NOT apply
+→ CurrentYearCarryover = 0 → Rule APPLIES, limit is 0
+→ Only CurrentYear rule is evaluated
+```
+
+### **Result:**
+| Employee Balance | Lapsed | Encashed | Carryover |
+|-----------------|--------|----------|-----------|
+| 10 leaves | 10 | 0 | **0** |
+| 50 leaves | 50 | 0 | **0** |
+| 100 leaves | 100 | 0 | **0** |
+
+### **✅ Test Case:**
+```
+TC-CONFIG-04: TotalBalance = Blank, CurrentYear = 0
+Setup:
+- FullCarryover: D
+- TotalBalance: [blank]
+- CurrentYearCarryover: 0, Action: L
+- Employee Unused: 50 leaves
+
+Expected:
+✓ LeaveYearLeavesLapsed: 50
+✓ CarryoverBalance: 0
+✓ TotalBalance rule ignored (blank)
+```
+
+---
+
+## 🧪 Scenario 5: Total Balance = 0, Current Year = 0, Action = Encash
+
+```
+Configuration:
+├─ FullCarryover Toggle: OFF (Disabled)
+├─ Total Leave Balance: 0
+├─ Current Year Leaves: 0
+├─ Action: Encashed (for both)
+```
+
+### **What Happens:**
+```
+Per Spec:
+→ Both rules apply with limit = 0
+→ ALL leaves should be ENCASHED (paid), nothing carries
+→ Employee gets salary credit for all unused leaves
+```
+
+### **Result:**
+| Employee Balance | Lapsed | Encashed | Carryover |
+|-----------------|--------|----------|-----------|
+| 10 leaves | 0 | 10 | **0** |
+| 50 leaves | 0 | 50 | **0** |
+| 100 leaves | 0 | 100 | **0** |
+
+### **✅ Test Case:**
+```
+TC-CONFIG-05: Both Fields = 0, Action = Encash
+Setup:
+- FullCarryover: D
+- TotalBalance: 0, Action: E
+- CurrentYearCarryover: 0, Action: E
+- Employee Unused: 50 leaves
+
+Expected:
+✓ LeaveYearLeavesEncashed: 50
+✓ LeaveYearLeavesLapsed: 0
+✓ CarryoverBalance: 0
+✓ Payment transaction created for 50 leaves
+
+Use Case:
+- Leave encashment policy (e.g., PL encashment at year-end)
+```
+
+---
+
+## 📊 Summary Table
+
+| Scenario | Total Balance | Current Year | Rule Applied | Result |
+|----------|--------------|--------------|--------------|--------|
+| **1** | Blank | Blank | **NONE** | ⚠️ Undefined (all carry or error) |
+| **2** | 0 | 0 | **BOTH** | All lapse/encash, 0 carry |
+| **3** | 0 | Blank | **Total Only** | All lapse/encash, 0 carry |
+| **4** | Blank | 0 | **Current Only** | All lapse/encash, 0 carry |
+| **5** | 0 (E) | 0 (E) | **BOTH** | All encashed, 0 carry |
+| **6** | 45 | Blank | **Total Only** | Max 45 carry, excess lapse |
+| **7** | Blank | 10 | **Current Only** | Max 10 from current year carry |
+
+---
+
+## ⚠️ Critical Testing Points
+
+### **1. Validation Rules**
+```
+Question for Dev:
+"Does the system prevent saving when:
+- FullCarryover = D (OFF)
+- Both TotalBalance AND CurrentYearCarryover are BLANK?
+
+This is a logical contradiction:
+- Toggle OFF means 'apply limits'
+- But both limits are blank means 'no limits'
+
+Should system show validation error?"
+```
+
+### **2. Priority When Both Rules Apply**
+```
+Per Spec (Page 5):
+When BOTH rules have values:
+1. First apply CurrentYearCarryover rule → Calculate LeaveYearLeavesLapsed
+2. Then apply TotalBalance rule → Calculate BroughtOverLeavesLapsed
+
+Example:
+- CurrentYearCarryover: 10
+- TotalBalance: 15
+- UnusedBalance: 20 (15 brought + 5 current)
+
+Step 1: Current year excess = 5 - 10 = -5 (no lapse)
+Step 2: Total excess = 20 - 15 = 5 (5 lapse from brought over)
+```
+
+### **3. Zero vs Blank in Database**
+```
+Question for Dev:
+"How is BLANK stored in database?
+- NULL?
+- Empty string ""?
+- -1?
+
+How is 0 stored?
+- Number 0?
+
+This matters for the condition check:
+if (field == null || field == "") → Rule does not apply
+if (field == 0) → Rule applies with limit 0
+```
+
+---
+
+## 🎯 Recommended Test Matrix
+
+| TC ID | Total Balance | Current Year | Action | Unused | Expected Lapse | Expected Carry |
+|-------|--------------|--------------|--------|--------|----------------|----------------|
+| TC-CFG-01 | Blank | Blank | N/A | 50 | 0 (or error) | 50 (or error) |
+| TC-CFG-02 | 0 | 0 | L | 50 | 50 | 0 |
+| TC-CFG-03 | 0 | 0 | E | 50 | 0 | 0 (50 encashed) |
+| TC-CFG-04 | 0 | Blank | L | 50 | 50 | 0 |
+| TC-CFG-05 | Blank | 0 | L | 50 | 50 | 0 |
+| TC-CFG-06 | 45 | Blank | L | 50 | 5 | 45 |
+| TC-CFG-07 | Blank | 10 | L | 50 | 40 | 10 |
+| TC-CFG-08 | 10 | 10 | L | 50 | 40 | 10 |
+
+---
+
+> 🎯 **Bottom Line**:  
+> **Blank = Rule ignored**, **Zero (0) = Rule applies with 0 limit (all leaves lapse/encash)**. This is the most important distinction to test! Also verify if system validates the contradictory scenario (Toggle OFF + Both Blank).
+
+**Want me to help you create the exact getData queries to verify each scenario?** 😊
+
 ## 📅 1. Joining Date Scenarios (Employee Lifecycle)
 
 ### **TC-JOIN-01: Mid-Year Joiner (Pro-Rata Accrual)**

@@ -111,6 +111,55 @@ Ensure the leave isn't deducted **twice**.
 
 ---
 
+```json
+{
+    "ReturnData": [
+        {
+            "Fields": {
+                "TransactionType": "A",
+                "Description": "Lapsing of excess Sick Leave [ staging ] at the end of the 2025 Leave Year",
+                "LeaveYearLeavesPenalised": 0,
+                "CarryoverBalance": 45,
+                "BroughtOverLeavesEncashed": 0,
+                "LeaveYearLeavesEncashed": 0,
+                "LeaveType": 1772519659735,
+                "LeaveYearLeavesAdded": 48,
+                "LeaveYearLeavesAvailed": 5,
+                "LeaveYearLeavesDeducted": 0,
+                "LeaveYearLeavesLapsed": 0,
+                "UnusedBalance": 45,
+                "LeaveName": "Sick Leave [ staging ]",
+                "LeaveYearFrom": 1753986600000,
+                "LeaveYearTill": 1785522599999,
+                "LeaveYearLeavesAccrued": 2,
+                "BroughtOverBalance": 0,
+                "BroughtOverLeavesLapsed": 0,
+                "CarryoverDate": 1785522599999
+            },
+            "Header": {
+                "Status": "A",
+                "FeatureVariantID": 1774598707856,
+                "SubjectUser": 1774854441827,
+                "ModuleName": "LnA",
+                "DocumentID": "KOZ5S:TRN:25064:1774598707856:1774871363921:001",
+                "DocumentType": "TRN",
+                "FeatureName": "Leave Carryover",
+                "TransactionID": 1774871363921,
+                "InitiatedOn": 1774871363921,
+                "FeatureID": "25064",
+                "ModuleID": "25",
+                "TenantID": "KOZ5S",
+                "TransactionUser": null,
+                "MenuOption": "25064",
+                "Version": "001",
+                "UpdatedOn": null,
+                "CreatedOn": 1774871363921
+            }
+        }
+    ]
+}
+```
+
 ## 🚨 Potential Bug to Watch For
 
 **Double Deduction Risk:**

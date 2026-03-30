@@ -133,4 +133,252 @@ Ensure the leave isn't deducted **twice**.
 □ Confirm no double deduction logic exists
 ```
 
-**Ready to execute?** Start with Step 1! 😊
+You are absolutely right! Leave management is one of the **most complex modules** in HRMS because it involves time, money, policies, and employee lifecycle events.
+
+Based on the **Leave Yearend Manager** and **Leave Carryover** specs, here are the **critical real-world scenarios** you should test beyond the basic carryover limits.
+
+---
+
+## 📅 1. Joining Date Scenarios (Employee Lifecycle)
+
+### **TC-JOIN-01: Mid-Year Joiner (Pro-Rata Accrual)**
+```
+Setup:
+- Leave Year: Aug 1, 2025 → July 31, 2026
+- Employee DOJ: Jan 1, 2026 (Mid-year)
+- Accrual Policy: Pro-rata (2 leaves/month from DOJ)
+- Balance at Year-End: 14 leaves (7 months × 2)
+- Carryover Limit: 10 leaves
+
+Expected:
+✓ LeaveYearLeavesAccrued = 14 (only from Jan-Jul)
+✓ BroughtOverBalance = 0 (First year)
+✓ CarryoverBalance = 10 (4 lapse)
+✓ System should NOT accrue for Aug-Dec 2025 (before joining)
+```
+
+### **TC-JOIN-02: Joined Exactly on Leave Year Start**
+```
+Setup:
+- Employee DOJ: Aug 1, 2025 (Same as Leave Year Start)
+- Accrual: Full year (24 leaves)
+
+Expected:
+✓ Eligible for full year accrual
+✓ No pro-rata calculation issues
+```
+
+### **TC-JOIN-03: Joined After Leave Year End**
+```
+Setup:
+- Leave Year End: July 31, 2026
+- Employee DOJ: Aug 15, 2026
+
+Expected:
+✓ Employee should NOT appear in year-end processing
+✓ No carryover transaction created for this employee
+```
+
+---
+
+## 🔄 2. Leave Request Workflow Scenarios
+
+### **TC-WF-01: Leave Pending Approval at Year-End**
+```
+Setup:
+- Apply Leave: July 30, 2026 (for dates Aug 1-5)
+- Status: Pending ('P') at year-end trigger (July 31 midnight)
+- Approved: Aug 2, 2026 (After year-end)
+
+Expected (Per Spec):
+✓ Status 'P' is considered IF LastAction is not CN/DE/RP/RI
+✓ LeaveYearLeavesAvailed SHOULD include these 5 days (Transaction Date = July 30)
+✓ Balance reduced in current year
+✓ When approved in Aug, system should NOT deduct again
+```
+
+### **TC-WF-02: Leave Cancelled After Year-End Trigger**
+```
+Setup:
+- Apply & Approve Leave: July 30, 2026
+- Year-End Trigger: July 31 midnight (Counts leave as availed)
+- Cancel Leave: Aug 5, 2026 (LastAction = 'CN')
+
+Expected:
+✓ Year-end transaction already created (frozen)
+✓ Cancelled leaves should be added back to NEXT year's balance
+✓ Check if system creates an adjustment transaction for reversal
+```
+
+### **TC-WF-03: Leave Rejected After Year-End Trigger**
+```
+Setup:
+- Apply Leave: July 30, 2026
+- Year-End Trigger: July 31 midnight
+- Reject Leave: Aug 2, 2026 (LastAction = 'RP')
+
+Expected:
+✓ Spec says LastAction 'RP' is EXCLUDED from availed calculation
+✓ BUT transaction was already created on July 31
+✓ Verify if system corrects the balance in next year
+```
+
+---
+
+## 🚪 3. Resignation & Exit Scenarios
+
+### **TC-EXIT-01: Employee Resigns Before Year-End**
+```
+Setup:
+- Employee Resigns: June 30, 2026
+- Last Working Day: July 15, 2026
+- Year-End: July 31, 2026
+- Unused Leaves: 10 days
+
+Expected:
+✓ Should these 10 days carry forward? OR
+✓ Should they be encashed in Full & Final (FnF)?
+✓ Verify if carryover policy applies to resigned employees
+✓ Check Applicability: "Active Employees only" might exclude them
+```
+
+### **TC-EXIT-02: Employee Resigns After Year-End**
+```
+Setup:
+- Year-End Process: July 31, 2026 (Carryover created)
+- Employee Resigns: Aug 15, 2026
+- Carryover Balance: 10 leaves
+
+Expected:
+✓ 10 leaves carried to next year
+✓ Upon resignation, these 10 leaves should be encashed in FnF
+✓ Verify next year's carryover doesn't happen for resigned emp
+```
+
+---
+
+## ⚙️ 4. Policy & Configuration Scenarios
+
+### **TC-POL-01: Carryover Policy Changed Mid-Year**
+```
+Setup:
+- Jan 1, 2026: Policy says "Full Carryover = E"
+- June 1, 2026: Policy changed to "Full Carryover = D, Limit = 10"
+- Year-End: July 31, 2026
+
+Expected:
+✓ Which policy applies? The one active on July 31?
+✓ Verify system picks the latest active policy variant
+```
+
+### **TC-POL-02: Employee Moves Between Policy Groups**
+```
+Setup:
+- Jan-Jun 2026: Employee in Dept A (Limit 10 days)
+- Jul 2026: Employee transferred to Dept B (Limit 20 days)
+- Year-End: July 31, 2026
+
+Expected:
+✓ Verify Applicability function picks correct policy based on July 31 status
+✓ Check if tenure/age slabs are recalculated on July 31
+```
+
+### **TC-POL-03: Multiple Leave Types with Different Rules**
+```
+Setup:
+- Sick Leave: Full Carryover = E (Unlimited)
+- Privilege Leave: Full Carryover = D (Limit 45)
+- Compensatory Off: Lapse all (Limit 0)
+
+Expected:
+✓ Year-end job runs separately for EACH leave type
+✓ Verify 3 separate carryover transactions created
+✓ Each follows its own policy rules
+```
+
+---
+
+## 🛠️ 5. System & Technical Scenarios
+
+### **TC-SYS-01: Re-Running Year-End Job (Idempotency)**
+```
+Setup:
+- Trigger Year-End: July 31 midnight → Transaction Created
+- Trigger Year-End AGAIN: Aug 1 morning
+
+Expected:
+✓ Should it create a DUPLICATE transaction? (Bug)
+✓ OR should it skip/update existing? (Expected)
+✓ Spec says: "Get CarryoverBalance from LAST Leave Carryover Transaction"
+✓ Verify system checks for existing transaction before creating new one
+```
+
+### **TC-SYS-02: Adjustment Made After Year-End Trigger**
+```
+Setup:
+- Year-End Trigger: July 31 midnight
+- HR Adjustment: Aug 2, 2026 (+5 leaves)
+
+Expected:
+✓ Adjustment should NOT be included in previous year's calculation
+✓ Adjustment should appear in NEXT year's balance
+✓ Verify Transaction Date logic (Aug 2 is outside leave year)
+```
+
+### **TC-SYS-03: Timezone Differences**
+```
+Setup:
+- Tenant Timezone: Asia/Calcutta (IST)
+- Employee Location: US (EST)
+- Year-End: July 31 23:59:59 IST
+
+Expected:
+✓ Spec says: "End of day in the Tenant Time zone"
+✓ Verify calculation uses IST, not employee's local time
+✓ Leave requests made on July 31 EST (which is Aug 1 IST) should NOT count
+```
+
+### **TC-SYS-04: Leap Year (Feb 29)**
+```
+Setup:
+- Leave Year: Jan 1, 2024 → Dec 31, 2024 (Leap Year)
+- Accrual: 2 leaves/month
+
+Expected:
+✓ February should have 29 days, but accrual is usually per month
+✓ Verify no calculation errors due to 366 days vs 365 days
+```
+
+---
+
+## 📋 Master Testing Checklist
+
+| Category | Scenario | Priority |
+|----------|----------|----------|
+| **Joining** | Mid-year joiner (Pro-rata) | 🔴 High |
+| **Joining** | Joined after year-end (Exclude) | 🟡 Medium |
+| **Workflow** | Leave pending at year-end | 🔴 High |
+| **Workflow** | Leave cancelled after year-end | 🟡 Medium |
+| **Exit** | Resigned employee (Active check) | 🔴 High |
+| **Policy** | Policy changed mid-year | 🟡 Medium |
+| **Policy** | Multiple leave types (SL, PL, CO) | 🔴 High |
+| **System** | Re-running job (Duplicate check) | 🔴 High |
+| **System** | Adjustment after year-end | 🟡 Medium |
+| **System** | Timezone validation | 🟢 Low |
+
+---
+
+## 💡 Pro Tips for You
+
+1.  **Focus on "Transaction Date"**: The spec repeatedly says **"where the transaction date is between the start and end of the leave year"**. This is the root of most bugs (vs. Leave Date).
+2.  **Check "LastAction"**: Verify that cancelled ('CN'), rejected ('RP'), deleted ('DE') leaves are EXCLUDED from `LeaveYearLeavesAvailed`.
+3.  **Test "Active Employees"**: The applicability often says "Active Employees only". Resigned employees should typically be excluded from carryover (they get FnF encashment instead).
+4.  **Verify Transaction Type**: Your screenshot showed `'A'`, but Yearend Spec says `'SU'`. Clarify this with dev—it might be a spec mismatch.
+5.  **One Transaction Per Year**: Ensure the system doesn't create multiple carryover transactions for the same employee + leave type + year.
+
+---
+
+> 🎯 **Bottom Line**:  
+> You've tested the **happy path** (basic carryover). Now focus on **lifecycle events** (joining, resigning), **workflow states** (pending, cancelled), and **system behavior** (re-runs, adjustments). These are where real-world bugs hide!
+
+Which scenario do you want to pick next? I recommend **TC-WF-01 (Pending Leave)** or **TC-SYS-01 (Re-Run)** as they are high-risk! 😊

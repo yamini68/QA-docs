@@ -312,6 +312,420 @@ curl --location 'https://r6flmoooy9.execute-api.ap-south-1.amazonaws.com/Stage/k
 
 ---
 
-**This approach is MUCH faster than waiting for monthly accruals!** You can test all scenarios in under an hour. 
+# 📋 SMBC Leave Carryover Test Cases
 
-Which test case do you want to execute first? 😊
+## 🎯 Policy Configuration Summary
+
+| Leave Type | Total Leaves | Carryover Limit | Action on Excess |
+|------------|-------------|-----------------|------------------|
+| **Casual Leave (CL)** | 14 | **1 leave** | Lapse |
+| **Sick Leave (SL)** | 14 | **0 leaves** | Lapse |
+| **Privilege Leave (PL)** | 14 | **45 leaves** | Lapse |
+
+---
+
+## ✅ Test Case Matrix
+
+### **TC-CL-01: Casual Leave - 1 Leave Carryover**
+
+```
+Setup:
+├─ Leave Type: Casual Leave
+├─ Policy: FullCarryover = D, TotalBalance = 1, Action = L
+├─ Current Balance: 14 leaves
+├─ Availed: 0 leaves
+└─ Unused Balance: 14 leaves
+
+Expected Carryover Transaction:
+├─ UnusedBalance: 14
+├─ LeaveYearLeavesLapsed: 13 (14 - 1)
+├─ CarryoverBalance: 1 ✅
+└─ Next Year Start Balance: 1
+
+Verification Query:
+{
+  "function": "getData",
+  "expression": "[KOZ5S^TRN^25064^*^A^*^*^EMPLOYEE_ID],[],[Fields.LeaveName^Fields.UnusedBalance^Fields.LeaveYearLeavesLapsed^Fields.CarryoverBalance], [0^50]"
+}
+
+Status: [ ] PASS / [ ] FAIL
+```
+
+---
+
+### **TC-SL-01: Sick Leave - No Carryover (0 Limit)**
+
+```
+Setup:
+├─ Leave Type: Sick Leave
+├─ Policy: FullCarryover = D, TotalBalance = 0, Action = L
+├─ Current Balance: 14 leaves
+├─ Availed: 0 leaves
+└─ Unused Balance: 14 leaves
+
+Expected Carryover Transaction:
+├─ UnusedBalance: 14
+├─ LeaveYearLeavesLapsed: 14 (14 - 0)
+├─ CarryoverBalance: 0 ✅
+└─ Next Year Start Balance: 0
+
+Verification Query:
+{
+  "function": "getData",
+  "expression": "[KOZ5S^TRN^25064^*^A^*^*^EMPLOYEE_ID],[],[Fields.LeaveName^Fields.UnusedBalance^Fields.LeaveYearLeavesLapsed^Fields.CarryoverBalance], [0^50]"
+}
+
+Status: [ ] PASS / [ ] FAIL
+```
+
+---
+
+### **TC-PL-01: Privilege Leave - 45 Leave Carryover**
+
+```
+Setup:
+├─ Leave Type: Privilege Leave
+├─ Policy: FullCarryover = D, TotalBalance = 45, Action = L
+├─ Current Balance: 14 leaves
+├─ Availed: 0 leaves
+└─ Unused Balance: 14 leaves
+
+Expected Carryover Transaction:
+├─ UnusedBalance: 14
+├─ LeaveYearLeavesLapsed: 0 (14 < 45, no excess)
+├─ CarryoverBalance: 14 ✅
+└─ Next Year Start Balance: 14
+
+Verification Query:
+{
+  "function": "getData",
+  "expression": "[KOZ5S^TRN^25064^*^A^*^*^EMPLOYEE_ID],[],[Fields.LeaveName^Fields.UnusedBalance^Fields.LeaveYearLeavesLapsed^Fields.CarryoverBalance], [0^50]"
+}
+
+Status: [ ] PASS / [ ] FAIL
+```
+
+---
+
+## 🧪 Additional Edge Cases
+
+### **TC-CL-02: Casual Leave - At Exact Limit**
+
+```
+Setup:
+├─ Leave Type: Casual Leave
+├─ Policy: TotalBalance = 1
+├─ Current Balance: 1 leave (after availing 13)
+├─ Unused Balance: 1 leave
+
+Expected:
+├─ LeaveYearLeavesLapsed: 0
+├─ CarryoverBalance: 1 ✅
+└─ All leaves carry (at exact limit)
+
+Status: [ ] PASS / [ ] FAIL
+```
+
+---
+
+### **TC-SL-02: Sick Leave - Partial Availed**
+
+```
+Setup:
+├─ Leave Type: Sick Leave
+├─ Policy: TotalBalance = 0
+├─ Current Balance: 14 leaves
+├─ Availed: 5 leaves
+└─ Unused Balance: 9 leaves
+
+Expected:
+├─ LeaveYearLeavesLapsed: 9 (9 - 0)
+├─ CarryoverBalance: 0 ✅
+└─ All unused leaves lapse
+
+Status: [ ] PASS / [ ] FAIL
+```
+
+---
+
+### **TC-PL-02: Privilege Leave - Over 45 Limit**
+
+```
+Setup:
+├─ Leave Type: Privilege Leave
+├─ Policy: TotalBalance = 45
+├─ Current Balance: 60 leaves (via HR Adjustment)
+├─ Availed: 0 leaves
+└─ Unused Balance: 60 leaves
+
+Expected:
+├─ LeaveYearLeavesLapsed: 15 (60 - 45)
+├─ CarryoverBalance: 45 ✅
+└─ Excess 15 leaves lapse
+
+Status: [ ] PASS / [ ] FAIL
+```
+
+---
+
+## 📊 Combined Test (All 3 Leave Types for Same Employee)
+
+### **TC-ALL-01: Multi Leave Type Carryover**
+
+```
+Setup:
+├─ Employee: Single test employee
+├─ Casual Leave: 14 leaves → Carryover: 1, Lapse: 13
+├─ Sick Leave: 14 leaves → Carryover: 0, Lapse: 14
+└─ Privilege Leave: 14 leaves → Carryover: 14, Lapse: 0
+
+Expected Summary:
+├─ Total Unused: 42 leaves (14+14+14)
+├─ Total Lapsed: 27 leaves (13+14+0)
+└─ Total Carryover: 15 leaves (1+0+14)
+
+Verification:
+Query each leave type separately via getData
+Check 3 separate Leave Carryover transactions created
+
+Status: [ ] PASS / [ ] FAIL
+```
+
+---
+
+## 🛠️ Execution Steps
+
+### **Step 1: Configure Carryover Policies**
+
+| Leave Type | FullCarryover | TotalBalance | Action |
+|------------|--------------|--------------|--------|
+| Casual Leave | D | 1 | L |
+| Sick Leave | D | 0 | L |
+| Privilege Leave | D | 45 | L |
+
+---
+
+### **Step 2: Add Leaves via HR Adjustment**
+
+```
+For Each Leave Type:
+├─ Go to: HR Leave Adjustment
+├─ Employee: Test Employee
+├─ Leave Type: [CL/SL/PL]
+├─ Transaction Type: 'A' (Addition)
+├─ Days: 14
+├─ Reason: "SMBC Carryover Testing"
+└─ Status: Approved
+```
+
+---
+
+### **Step 3: Trigger Year-End**
+
+```bash
+curl --location 'https://r6flmoooy9.execute-api.ap-south-1.amazonaws.com/Stage/kafkaproducer' \
+--header 'Content-Type: application/json' \
+--data '{
+    "topic": "leave-year-end",
+    "message": "{\"tenantId\":\"KOZ5S\",\"entityId\":1755166851528,\"documentId\":\"KOZ5S:ETY:25005:1755166851528:004\",\"timezone\":\"Asia/Calcutta\",\"scheduleExpression\":\"2026-07-31T23:59:59\",\"startYear\":2025}"
+}'
+```
+
+---
+
+### **Step 4: Verify via getData**
+
+```json
+{
+  "function": "getData",
+  "expression": "[KOZ5S^TRN^25064^*^A^*^*^EMPLOYEE_ID],[],[Header.DocumentID^Fields.LeaveName^Fields.UnusedBalance^Fields.LeaveYearLeavesLapsed^Fields.CarryoverBalance], [0^50]"
+}
+```
+
+---
+
+### **Step 5: Check Leave Balance Card**
+
+```
+For Each Leave Type, Verify:
+├─ Year Start Balance = CarryoverBalance from transaction
+├─ Lapsed field shows correct value
+└─ Total Balance reflects carryover
+```
+
+---
+
+## 📈 Expected Results Summary
+
+| Leave Type | Unused | Limit | Lapsed | Carryover | Next Year Start |
+|------------|--------|-------|--------|-----------|-----------------|
+| **Casual** | 14 | 1 | **13** | **1** | 1 |
+| **Sick** | 14 | 0 | **14** | **0** | 0 |
+| **Privilege** | 14 | 45 | **0** | **14** | 14 |
+
+---
+
+```json
+{
+    "ReturnData": [
+        {
+            "Fields": {
+                "TransactionType": "A",
+                "Description": "Lapsing of excess Casual leave LC [ Smbc ] at the end of the 2025 Leave Year",
+                "LeaveYearLeavesPenalised": 0,
+                "CarryoverBalance": 1,
+                "BroughtOverLeavesEncashed": 0,
+                "LeaveYearLeavesEncashed": 0,
+                "LeaveType": 1774941072901,
+                "LeaveYearLeavesAdded": 14,
+                "LeaveYearLeavesAvailed": 0,
+                "LeaveYearLeavesDeducted": 0,
+                "LeaveYearLeavesLapsed": 13,
+                "UnusedBalance": 14,
+                "LeaveName": "Casual leave LC [ Smbc ]",
+                "LeaveYearFrom": 1753986600000,
+                "LeaveYearTill": 1785522599999,
+                "LeaveYearLeavesAccrued": 0,
+                "BroughtOverBalance": 0,
+                "BroughtOverLeavesLapsed": 0,
+                "CarryoverDate": 1785522599999
+            },
+            "Header": {
+                "Status": "A",
+                "FeatureVariantID": 1774941633189,
+                "SubjectUser": 1774940863871,
+                "ModuleName": "LnA",
+                "DocumentID": "KOZ5S:TRN:25064:1774941633189:1774942193590:001",
+                "DocumentType": "TRN",
+                "FeatureName": "Leave Carryover",
+                "TransactionID": 1774942193590,
+                "InitiatedOn": 1774942193591,
+                "FeatureID": "25064",
+                "ModuleID": "25",
+                "TenantID": "KOZ5S",
+                "TransactionUser": null,
+                "MenuOption": "25064",
+                "Version": "001",
+                "UpdatedOn": null,
+                "CreatedOn": 1774942193590
+            }
+        },
+        {
+            "Fields": {
+                "TransactionType": "A",
+                "Description": "Lapsing of excess Sick leave - LC [ smbc ] at the end of the 2025 Leave Year",
+                "LeaveYearLeavesPenalised": 0,
+                "CarryoverBalance": 0,
+                "BroughtOverLeavesEncashed": 0,
+                "LeaveYearLeavesEncashed": 0,
+                "LeaveType": 1774941045346,
+                "LeaveYearLeavesAdded": 14,
+                "LeaveYearLeavesAvailed": 0,
+                "LeaveYearLeavesDeducted": 0,
+                "LeaveYearLeavesLapsed": 14,
+                "UnusedBalance": 14,
+                "LeaveName": "Sick leave - LC [ smbc ]",
+                "LeaveYearFrom": 1753986600000,
+                "LeaveYearTill": 1785522599999,
+                "LeaveYearLeavesAccrued": 0,
+                "BroughtOverBalance": 0,
+                "BroughtOverLeavesLapsed": 0,
+                "CarryoverDate": 1785522599999
+            },
+            "Header": {
+                "Status": "A",
+                "FeatureVariantID": 1774941600663,
+                "SubjectUser": 1774940863871,
+                "ModuleName": "LnA",
+                "DocumentID": "KOZ5S:TRN:25064:1774941600663:1774942206981:001",
+                "DocumentType": "TRN",
+                "FeatureName": "Leave Carryover",
+                "TransactionID": 1774942206981,
+                "InitiatedOn": 1774942206981,
+                "FeatureID": "25064",
+                "ModuleID": "25",
+                "TenantID": "KOZ5S",
+                "TransactionUser": null,
+                "MenuOption": "25064",
+                "Version": "001",
+                "UpdatedOn": null,
+                "CreatedOn": 1774942206981
+            }
+        },
+        {
+            "Fields": {
+                "TransactionType": "A",
+                "Description": "Lapsing of excess Sick Leave [ staging ] at the end of the 2025 Leave Year",
+                "LeaveYearLeavesPenalised": 0,
+                "CarryoverBalance": 2,
+                "BroughtOverLeavesEncashed": 0,
+                "LeaveYearLeavesEncashed": 0,
+                "LeaveType": 1772519659735,
+                "LeaveYearLeavesAdded": 0,
+                "LeaveYearLeavesAvailed": 0,
+                "LeaveYearLeavesDeducted": 0,
+                "LeaveYearLeavesLapsed": 0,
+                "UnusedBalance": 2,
+                "LeaveName": "Sick Leave [ staging ]",
+                "LeaveYearFrom": 1753986600000,
+                "LeaveYearTill": 1785522599999,
+                "LeaveYearLeavesAccrued": 2,
+                "BroughtOverBalance": 0,
+                "BroughtOverLeavesLapsed": 0,
+                "CarryoverDate": 1785522599999
+            },
+            "Header": {
+                "Status": "A",
+                "FeatureVariantID": 1774598707856,
+                "SubjectUser": 1774940863871,
+                "ModuleName": "LnA",
+                "DocumentID": "KOZ5S:TRN:25064:1774598707856:1774942219181:001",
+                "DocumentType": "TRN",
+                "FeatureName": "Leave Carryover",
+                "TransactionID": 1774942219181,
+                "InitiatedOn": 1774942219181,
+                "FeatureID": "25064",
+                "ModuleID": "25",
+                "TenantID": "KOZ5S",
+                "TransactionUser": null,
+                "MenuOption": "25064",
+                "Version": "001",
+                "UpdatedOn": null,
+                "CreatedOn": 1774942219181
+            }
+        }
+    ]
+}
+
+```
+
+## ✅ Pass Criteria
+
+```
+□ All 3 Leave Carryover transactions created
+□ TransactionType = 'A' for all
+□ Description mentions correct leave type and year
+□ LeaveYearLeavesLapsed matches expected values
+□ CarryoverBalance matches expected values
+□ Next year's Year Start Balance = CarryoverBalance
+□ No duplicate transactions created
+□ UI balance card reflects correct values
+```
+
+---
+
+## 🐛 Common Issues to Watch
+
+| Issue | Symptom | Fix |
+|-------|---------|-----|
+| Wrong policy applied | Carryover doesn't match limit | Check policy applicability |
+| No transaction created | Year-end didn't run | Re-trigger Kafka |
+| All leaves carry | Policy not saved/active | Verify policy status |
+| Balance not updated | UI caching issue | Refresh or wait 5 mins |
+
+---
+
+> 🎯 **Bottom Line**:  
+> Test all 3 leave types separately first, then test combined scenario. Verify via **getData** (backend) AND **Leave Balance Card** (UI). Document any mismatches as bugs!
+
+**Ready to execute?** Start with TC-SL-01 (simplest - all lapse), then TC-CL-01 (1 carry), then TC-PL-01 (all carry)! 😊

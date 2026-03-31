@@ -228,3 +228,64 @@ So when the Total Balance rule triggers lapsing, it's considered as coming from 
 | `BroughtOverLeavesLapsed/Encashed` | Excess from **Total Balance rule** |
 
 **This naming convention helps distinguish which rule caused the lapse/encashment**, even if the employee has no actual brought-over balance!
+
+Yes, you are **CORRECT**! ✅
+
+When **only ONE rule** is configured (either Total Balance OR Current Year Leaves), the lapsing is counted under **`LeaveYearLeavesLapsed`**, NOT `BroughtOverLeavesLapsed`.
+
+---
+
+## 📊 According to the Spec (Leave Yearend Manager, Page 5):
+
+### **When Only ONE Rule is Configured:**
+
+**Case 1: Only Current Year Rule**
+```
+If CurrentLeaveYearCarryoverAction = 'L':
+→ Excess leaves assigned to: **LeaveYearLeavesLapsed** ✅
+```
+
+**Case 2: Only Total Balance Rule**
+```
+"When defined as the only rule, the service deducts the TotalBalance 
+field value from the UnusedBalance field value to arrive at the leaves 
+that will lapse or encash. If the CarryoverAction = L, the difference 
+between the two will be assigned to **LeaveYearLeavesLapsed**" ✅
+```
+
+---
+
+### **When BOTH Rules are Configured:**
+
+```
+Step 1: Current Year Rule applies first
+→ Excess assigned to: **LeaveYearLeavesLapsed**
+
+Step 2: Total Balance Rule applies second
+→ Excess assigned to: **BroughtOverLeavesLapsed**
+```
+
+---
+
+## 📋 Summary Table
+
+| Configuration | Field Used for Lapsing |
+|--------------|----------------------|
+| **Only Current Year Rule** | `LeaveYearLeavesLapsed` ✅ |
+| **Only Total Balance Rule** | `LeaveYearLeavesLapsed` ✅ |
+| **Both Rules** | `LeaveYearLeavesLapsed` (Current Year rule) <br> `BroughtOverLeavesLapsed` (Total Balance rule) |
+
+---
+
+## 🎯 Why This Distinction?
+
+The spec uses **`BroughtOverLeavesLapsed`** ONLY when **both rules** are configured because:
+
+1. The **Current Year rule** is applied first (targets current year leaves)
+2. The **Total Balance rule** is applied second (targets overall balance, conceptually "brought over" portion)
+
+When only one rule exists, there's no need to distinguish between "current year" vs "brought over" lapsing, so it all goes to **`LeaveYearLeavesLapsed`**.
+
+---
+
+**Your understanding is correct!** When only one rule is configured, it counts under `LeaveYearLeavesLapsed`. 👍

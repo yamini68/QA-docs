@@ -1,4 +1,4 @@
-## 🎯 Objective
+## EDGE CASE SCNERIO -1
 Verify that if a leave is **approved before year-end** but the **leave dates are in the next year**, it is counted in the **current year's availed balance** and **not deducted again** from next year's carryover.
 
 ---

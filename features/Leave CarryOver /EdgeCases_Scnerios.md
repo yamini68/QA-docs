@@ -679,6 +679,50 @@ Expected (Per Spec):
 ✓ Balance reduced in current year
 ✓ When approved in Aug, system should NOT deduct again
 ```
+```json
+{
+            "Fields": {
+                "TransactionType": "A",
+                "Description": "Lapsing of excess Sick Leave [ staging ] at the end of the 2025 Leave Year",
+                "LeaveYearLeavesPenalised": 0,
+                "CarryoverBalance": 9,
+                "BroughtOverLeavesEncashed": 0,
+                "LeaveYearLeavesEncashed": 0,
+                "LeaveType": 1772519659735,
+                "LeaveYearLeavesAdded": 12,
+                "LeaveYearLeavesAvailed": 5,
+                "LeaveYearLeavesDeducted": 0,
+                "LeaveYearLeavesLapsed": 0,
+                "UnusedBalance": 9,
+                "LeaveName": "Sick Leave [ staging ]",
+                "LeaveYearFrom": 1753986600000,
+                "LeaveYearTill": 1785522599999,
+                "LeaveYearLeavesAccrued": 2,
+                "BroughtOverBalance": 0,
+                "BroughtOverLeavesLapsed": 0,
+                "CarryoverDate": 1785522599999
+            },
+            "Header": {
+                "Status": "A",
+                "FeatureVariantID": 1774598707856,
+                "SubjectUser": 1774877949593,
+                "ModuleName": "LnA",
+                "DocumentID": "KOZ5S:TRN:25064:1774598707856:1774937098458:001",
+                "DocumentType": "TRN",
+                "FeatureName": "Leave Carryover",
+                "TransactionID": 1774937098458,
+                "InitiatedOn": 1774937098459,
+                "FeatureID": "25064",
+                "ModuleID": "25",
+                "TenantID": "KOZ5S",
+                "TransactionUser": null,
+                "MenuOption": "25064",
+                "Version": "001",
+                "UpdatedOn": null,
+                "CreatedOn": 1774937098458
+            }
+        }
+```
 
 ### **TC-WF-02: Leave Cancelled After Year-End Trigger**
 ```

@@ -864,4 +864,232 @@ Expected:
 > 🎯 **Bottom Line**:  
 > You've tested the **happy path** (basic carryover). Now focus on **lifecycle events** (joining, resigning), **workflow states** (pending, cancelled), and **system behavior** (re-runs, adjustments). These are where real-world bugs hide!
 
-Which scenario do you want to pick next? I recommend **TC-WF-01 (Pending Leave)** or **TC-SYS-01 (Re-Run)** as they are high-risk! 😊
+# 🚨 Critical Edge Case: Leave Rejected AFTER Year-End
+
+This is an **excellent test scenario**! You've identified a real-world gap in the system. Let me break down what happens and what should happen:
+
+---
+
+## 📊 Your Current Situation
+
+```
+Timeline:
+├─ March 31: Leave Applied (5 days, Aug 11-15)
+├─ March 31: Status = Pending ('P')
+├─ July 31: Year-End Runs → Counts 5 leaves as "Availed"
+├─ August 1: Manager REJECTS the leave (LastAction = 'RP')
+└─ Question: What happens to those 5 leaves?
+```
+
+**Your Carryover Transaction Shows:**
+```
+LeaveYearLeavesAvailed: 5 ✅ (Counted the pending leave)
+UnusedBalance: 9
+CarryoverBalance: 9
+```
+
+---
+
+## ⚠️ The Problem
+
+### **What Actually Happens (Current Behavior):**
+
+| Event | Balance Impact |
+|-------|---------------|
+| Year-End (July 31) | 5 leaves counted as "availed" → Carryover = 9 |
+| Leave Rejected (Aug 1) | **NO automatic adjustment** |
+| Next Year Start Balance | **9 leaves** (employee lost 5 leaves unfairly!) |
+
+### **What SHOULD Happen (Expected Behavior):**
+
+| Event | Balance Impact |
+|-------|---------------|
+| Year-End (July 31) | 5 leaves counted as "availed" → Carryover = 9 |
+| Leave Rejected (Aug 1) | **System should ADD BACK 5 leaves** |
+| Next Year Start Balance | **14 leaves** (9 + 5 rejected leaves returned) |
+
+---
+
+## 🔍 According to the Spec
+
+From **Leave Yearend Manager (Page 3)**:
+
+> "Transactions completed or in progress (Workflow.TransactionStatus= 'C' or 'P') are considered **if the LastAction is not 'CN', 'DE', 'RP', or 'RI'**."
+
+**Key Point:**
+- At year-end (July 31): Status = 'P', LastAction ≠ 'RP' → **Counted as availed** ✅
+- After rejection (Aug 1): LastAction = 'RP' → **Should NOT have been counted** ❌
+
+**But the carryover transaction is already created and "frozen"! It doesn't auto-update.**
+
+---
+
+## 🎯 What You Need to Test
+
+### **Test Scenario: Rejection After Year-End**
+
+```
+STEP 1: Verify current state
+├─ Carryover Transaction Created: July 31
+├─ LeaveYearLeavesAvailed: 5
+├─ CarryoverBalance: 9
+
+STEP 2: Reject the leave request
+├─ Change Status: 'P' → 'C' (Completed)
+├─ LastAction: 'AP' → 'RP' (Rejected)
+├─ Date: August 1, 2026 (after year-end)
+
+STEP 3: Check employee's leave balance
+├─ Does balance increase by 5 leaves?
+├─ Or does it stay at 9 leaves?
+
+STEP 4: Check for adjustment transaction
+├─ Is there a NEW transaction that adds back 5 leaves?
+├─ Transaction Type: 'A' (Addition)
+├─ Description: Something like "Leave reversal - Request rejected"
+```
+
+---
+
+## 📋 Expected System Behavior
+
+### **Option A: System Creates Adjustment Transaction** ✅ (Ideal)
+
+```
+When leave is rejected after year-end:
+1. System detects LastAction changed to 'RP'
+2. System creates NEW Leave Adjustment transaction
+3. Adds back the 5 leaves to employee's balance
+4. Next year balance = 9 + 5 = 14 leaves
+
+Transaction Created:
+├─ TransactionType: 'A'
+├─ LeaveDays: 5
+├─ Description: "Reversal of availed leaves - Request rejected post year-end"
+├─ Transaction Date: August 1, 2026
+```
+
+### **Option B: System Does Nothing** ❌ (Bug)
+
+```
+When leave is rejected after year-end:
+1. No adjustment transaction created
+2. Employee's balance stays at 9 leaves
+3. Employee lost 5 leaves unfairly!
+
+This is a DATA INTEGRITY BUG!
+```
+
+### **Option C: Manual HR Adjustment Required** ⚠️ (Workaround)
+
+```
+When leave is rejected after year-end:
+1. HR must manually add back 5 leaves
+2. Via HR Leave Adjustment feature
+3. System doesn't automate this
+
+This is a USABILITY ISSUE (extra work for HR)
+```
+
+---
+
+## 🐛 Bug to Raise (If Option B or C)
+
+```
+BUG: Leave Rejection After Year-End Does Not Restore Balance
+
+Issue:
+When a leave request is:
+1. Pending ('P') at year-end → Counted as "availed" in carryover
+2. Rejected ('RP') AFTER year-end → Balance NOT restored
+
+Result:
+- Employee loses leaves unfairly
+- CarryoverBalance is incorrect
+- No automatic adjustment transaction created
+
+Steps to Reproduce:
+1. Apply leave before year-end (Status: Pending)
+2. Leave dates are in NEXT leave year
+3. Trigger year-end process (leave counted as availed)
+4. Reject leave AFTER year-end (LastAction: 'RP')
+5. Check employee's next year balance
+
+Expected:
+- System should create adjustment transaction
+- Rejected leaves should be added back to balance
+- Next year balance should reflect the reversal
+
+Actual:
+- No adjustment transaction
+- Balance remains reduced
+- Employee loses leaves
+
+Impact:
+- Financial loss to employees
+- HR must manually fix each case
+- Data integrity issue
+
+Priority: HIGH (Employee compensation issue)
+```
+
+---
+
+## 🧪 Test Matrix for This Scenario
+
+| Test Case | Leave Status at Year-End | Action After Year-End | Expected Result |
+|-----------|-------------------------|----------------------|-----------------|
+| **TC-REJ-01** | Pending ('P') | Rejected ('RP') | 5 leaves added back |
+| **TC-REJ-02** | Pending ('P') | Cancelled ('CN') | 5 leaves added back |
+| **TC-REJ-03** | Pending ('P') | Approved ('AP') | No change (correct) |
+| **TC-REJ-04** | Completed ('C') | Cancelled ('CN') | 5 leaves added back |
+| **TC-REJ-05** | Completed ('C') | Rejected ('RP') | 5 leaves added back |
+
+---
+
+## 💡 Questions to Ask Your Dev
+
+```
+1. "When a leave request is rejected AFTER year-end, does the system 
+   automatically create an adjustment transaction to restore the balance?"
+
+2. "Is there a background job that monitors LastAction changes and 
+   triggers balance adjustments?"
+
+3. "How does the system handle the gap between year-end snapshot and 
+   subsequent leave status changes?"
+
+4. "Should HR manually adjust this, or is it automated?"
+
+5. "Can you show me the code that handles post-year-end leave rejections?"
+```
+
+---
+
+## ✅ Quick Verification Steps
+
+**After rejecting the leave, check:**
+
+```
+STEP 1: Query leave balance card
+├─ Has balance increased from 9 to 14?
+
+STEP 2: Query transactions via getData
+├─ Expression: [KOZ5S^TRN^25053^*^A^*^*^EMPLOYEE_ID]
+├─ Look for NEW adjustment transaction after August 1
+├─ Check if LeaveDays = 5 (the rejected amount)
+
+STEP 3: Check leave request transaction
+├─ LastAction should be 'RP'
+├─ Workflow.Status should be 'C'
+
+STEP 4: Verify next year's BroughtOverBalance
+├─ Should be 14 (not 9)
+```
+
+---
+
+> 🎯 **Bottom Line**:  
+> **This is a critical edge case!** If the system doesn't automatically restore leaves when a pending leave is rejected after year-end, it's a **HIGH priority bug** because employees lose their entitled leaves. Test this thoroughly and raise a bug if no adjustment transaction is created!
+
+

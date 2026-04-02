@@ -311,4 +311,14 @@ When confirmation is backdated to Aug 3, 2025:
 
 **Reason:** System creates debit only for partial change month but not for subsequent full months, violating requirement: *"debit for each month will happen"*
 
+Alumni user
+1775114494751
+{"Mode":"UALB","Tenant":"KOZ5S","User":"1775114494751","Feature":"25053","FromDay":"AD","TillDay":"AD"}
+<img width="1213" height="793" alt="image" src="https://github.com/user-attachments/assets/16d48030-2b28-4320-9f47-757de0d3db27" />
+
+<img width="932" height="698" alt="image" src="https://github.com/user-attachments/assets/33df1f91-1907-451e-a88b-fd9618c0dfe7" />
+
+
+
+
 

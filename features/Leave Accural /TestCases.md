@@ -241,4 +241,74 @@ For each transaction in the `LeaveAccrued` array, verify:
 
 ---
 
+## **Test Case #2: Backdated Employee Confirmation**
+
+### **Test Setup:**
+- **Employee:** yaminianala99+72@gmail.com
+- **DOJ:** August 1, 2025
+- **Confirmation Date:** August 2, 2025
+- **Confirmation Effective:** August 3, 2025
+
+**Policy Variants:**
+- **Variant A (Unconfirmed):** 2.0 leaves/month
+- **Variant B (Confirmed):** 3.0 leaves/month
+
+
+
+---
+
+### **Expected Behavior:**
+When confirmation is backdated to Aug 3, 2025:
+1. **Debit** old variant (2.0 leaves) for **each month** from confirmation date
+2. **Credit** new variant (3.0 leaves) for all months
+3. **Net per month:** 2.0 - 2.0 + 3.0 = **3.0 leaves**
+
+   ### DEBIT Transactions (Variant A - Unconfirmed)
+
+**Critical Finding:** System creates PRORATED debit for the partial period  
+
+| Month    | Transaction Type | LeavesAccrued | AccrualFrom   | AccrualTill  | Notes                          |
+|----------|-----------------|---------------|---------------|--------------|--------------------------------|
+| Aug 2025 | Debit           | -1.9          | Aug 3, 2025   | Aug 31, 2025 | Prorated (28 days of 31)       |
+
+---
+
+### Why -1.9 instead of -2.0?
+
+- **Confirmation Effective:** Aug 3, 2025 (not Aug 1)  
+- Variant A was applicable only from **Aug 1–2, 2025 (2 days)**  
+- Debit calculated from **Aug 3 to Aug 31 = 28 days**  
+
+**Proration Calculation:**  
+`2.0 × (28/31) = 1.806... ≈ 1.9` *(rounded to 1 decimal)*
+
+    
+| Period              | Expected                                                        | Actual                                                                 |
+|--------------------|------------------------------------------------------------------|------------------------------------------------------------------------|
+| Aug 2025           | Split into 2 transactions (Probation 2 days, Confirmed 29 days) | 1 Credit (2.0) + 1 Prorated Debit (-1.9) + 1 Credit (3.0)             |
+| Sep 2025 - Mar 2026| Debit Old Variant (-2.0) + Credit New Variant (+3.0)            | Credit Old Variant (2.0) + Credit New Variant (3.0)                   |
+| Net Leaves/Month   | 3.0 leaves                                                     | 5.0 leaves (Double Accrual)                                           |
+
+---
+
+### **Actual Behavior:**
+| Period | Debit (Variant A) | Credit (Variant B) | Net Leaves |
+|--------|------------------|-------------------|------------|
+| Aug 2025 | -1.9 (prorated) | +3.0 | 3.1 |
+| Sep 2025 - Mar 2026 | **0** (NO DEBITS) | +3.0 | **5.0** ❌ |
+
+---
+
+### **Issue:**
+- ✅ Partial month debit created (-1.9 for Aug)
+- ❌ **Missing monthly debits** for Sep 2025 - Mar 2026
+- ❌ Employee receives **double accrual** (2.0 + 3.0 = 5.0 leaves/month)
+- ❌ Total over-credited by ~16 leaves
+
+---
+
+### **Status:** ❌ **FAILED**
+
+**Reason:** System creates debit only for partial change month but not for subsequent full months, violating requirement: *"debit for each month will happen"*
+
 

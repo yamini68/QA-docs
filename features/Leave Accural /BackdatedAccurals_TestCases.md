@@ -311,12 +311,166 @@ When confirmation is backdated to Aug 3, 2025:
 
 **Reason:** System creates debit only for partial change month but not for subsequent full months, violating requirement: *"debit for each month will happen"*
 
+
+## **Test Case #3: Backdated Employee Separation - Single Debit Transaction**
+
+### **Test Objective:**
+Verify that when an employee's separation date is backdated, the system creates **ONE single debit transaction** (not monthly debits) to reverse leave accruals credited after the separation date.
+
+---
+
+### **Test Setup:**
+
+| Field | Value |
+|-------|-------|
+| **Employee Email** | yaminianala99+73@gmail.com |
+| **DOJ (LegalEntityJoiningDate)** | January 1, 2026 |
+| **Employee Status** | Active |
+| **Confirmation Status** | Confirmed (1) |
+| **Leave Type** | Sick Leave [staging] |
+| **Policy** | 2.0 leaves/month, Monthly accrual, CreditAt: Start (S) |
+| **Backdated Separation Date** | January 30, 2026 |
+| **Current Date** | April 1, 2026 |
+
+---
+
+### **Prerequisites:**
+
+1. ✅ Create new employee with DOJ = Jan 1, 2026
+2. ✅ Assign leave accrual policy (2.0 leaves/month)
+3. ✅ Add "Sick Leave [staging]" to **Resignation Settings** under "Leave Types affected:"
+4. ✅ Let system accrue leaves for Jan, Feb, Mar, Apr 2026
+5. ⏳ Initiate backdated resignation with Last Working Day = Jan 30, 2026
+6. ⏳ Approve resignation (status changes to Alumni)
+
+---
+
+### **Expected Behavior:**
+
+| Period | Transaction Type | Amount | Description |
+|--------|-----------------|--------|-------------|
+| Jan 2026 | Credit | +2.0 | Full month (before separation) |
+| Feb 2026 | Credit | +2.0 | Already credited |
+| Mar 2026 | Credit | +2.0 | Already credited |
+| Apr 2026 | Credit | +2.0 | Already credited |
+| **Total Initial Credits** | | **+8.0 leaves** | |
+
+**After Separation Approval:**
+
+| Transaction | Count | Amount | Period |
+|------------|-------|--------|--------|
+| **Debit** | **1** | **-6.0** | Feb 1 - Apr 1 (after Jan 30) |
+| **UserAccrual.Status** | | `Inactive` | |
+| **UserAccrual.EffectiveTill** | | Jan 30, 2026 | |
+| **Final Balance** | | **2.0 leaves** | Only January accrual |
+
+---
+
+### **Key Verification Points:**
+
+```
+□ Total transactions: 5 (4 credits + 1 debit)
+□ Debit transaction count: 1 (NOT monthly debits)
+□ Debit amount: ~-6.0 (covers period after Jan 30, 2026)
+□ AccrualFrom on debit: Jan 30, 2026 (separation date)
+□ AccrualTill on debit: Apr 1, 2026 (current date)
+□ UserAccrual.Status: 'Inactive'
+□ UserAccrual.EffectiveTill: Jan 30, 2026
+□ Employee Status: 'Alumni'
+□ No future accrual schedules exist
+□ Final leave balance: 2.0 leaves
+```
+
+---
+
+### **Critical Difference from Confirmation:**
+
+| Scenario | Debit Pattern |
+|----------|--------------|
+| Backdated Confirmation | **Monthly debits** (one per month) |
+| **Backdated Separation** | **Single lump-sum debit** ✅ |
+
+---
+
+### **What to Verify (Backend - Alumni Portal Under Development):**
+
+Since the Alumni portal shows "Under Development", coordinate with developer to verify:
+
+**1. UserAccrual DynamoDB Record:**
+```sql
+Status = 'Inactive'
+EffectiveTill = Jan 30, 2026 timestamp
+```
+
+**2. Leave Accrual Transactions:**
+```
+Total count: 5 transactions
+Debit count: 1 (single)
+Debit amount: ~-6.0
+Debit AccrualFrom: Jan 30, 2026
+Debit AccrualTill: Apr 1, 2026
+```
+
+**3. Kafka Message (leave-accrual-queue):**
+```json
+{
+  "IsDebitTransaction": true,
+  "IsJoiningOrSeparationEvent": true,
+  "PeriodStart": 1738281600000,  // Jan 30, 2026
+  "PeriodEnd": 1743465600000     // Apr 1, 2026
+}
+```
+
+**4. EventBridge Scheduler:**
+```
+No future schedules for this employee
+```
+
+---
+
+### **Report Verification:**
+
+Generate Leave Balance Report with filter:
+- **Leave Name** = Equal = `Sick Leave [ staging ]`
+- **Employee** = yaminianala99+73@gmail.com
+
+**Expected Report Output:**
+| Column | Value |
+|--------|-------|
+| Current Balance | **2.0** |
+| Leave Year Leaves Availed | 0 (if no leaves taken) |
+
+---
+
+### **Why This Test Matters:**
+
+✅ Validates **"single debit" rule** for backdated separation  
+✅ Ensures employees don't retain leaves earned after separation  
+✅ Confirms system correctly uses separation date for accrual reversal  
+✅ Prevents financial/compliance issues from over-accrual  
+✅ Verifies UserAccrual status changes to Inactive  
+
+---
+
+### **Status:** ⏳ **PENDING EXECUTION**
+
+**Dependencies:**
+- Resignation workflow configuration
+- Leave types added to resignation settings
+- Developer support for backend verification (Alumni portal under development)
+
+**Next Steps:**
+1. Create employee yaminianala99+73@gmail.com
+2. Configure resignation settings
+3. Execute backdated separation
+4. Coordinate with developer for backend verification
+5. Validate final balance = 2.0 leaves<br>
 Alumni user
 1775114494751
 {"Mode":"UALB","Tenant":"KOZ5S","User":"1775114494751","Feature":"25053","FromDay":"AD","TillDay":"AD"}
-<img width="1213" height="793" alt="image" src="https://github.com/user-attachments/assets/16d48030-2b28-4320-9f47-757de0d3db27" />
+<img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/16d48030-2b28-4320-9f47-757de0d3db27" />
 
-<img width="932" height="698" alt="image" src="https://github.com/user-attachments/assets/33df1f91-1907-451e-a88b-fd9618c0dfe7" />
+<img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/33df1f91-1907-451e-a88b-fd9618c0dfe7" />
 
 
 

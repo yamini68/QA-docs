@@ -698,7 +698,81 @@ The system created **9 monthly transactions**, all within the **current leave ye
 
 ---
 
+## **Test Case #5A: Prospective Confirmation - Variant Transition & Double Accrual Check**
 
+### **Test Objective:**
+Verify that when an employee moves from Probation to Confirmed status prospectively, the system does **NOT** create double accrual for the overlapping period if the Confirmed Variant uses `AccrualStartsFrom = DOJ`.
+
+### **Test Type:**
+⚠️ **Negative Test Case** (Data Integrity / Configuration Logic)
+
+---
+
+### **Test Setup:**
+
+| Field | Value |
+|-------|-------|
+| **Employee Email** | yaminianala99+75@gmail.com |
+| **DOJ** | January 1, 2026 |
+| **Probation Period** | 3 Months (Jan - Mar 2026) |
+| **Confirmation Date** | April 1, 2026 (Prospective) |
+| **Variant A (Probation)** | 2.0 leaves/month, AccrualStartsFrom = DOJ |
+| **Variant B (Confirmed)** | 3.0 leaves/month, AccrualStartsFrom = DOJ |
+
+---
+
+### **Test Steps:**
+
+1.  Create employee with DOJ = Jan 1, 2026 (Status: Unconfirmed).
+2.  Allow accruals to run for Jan, Feb, Mar 2026 (Variant A credits 2.0/month).
+3.  Confirm employee prospectively effective April 1, 2026.
+4.  Trigger accrual processing.
+5.  Verify `LeaveAccrued` array for overlapping period (Jan-Mar).
+
+---
+
+### **Expected Behavior:**
+
+**System should NOT allow double accrual.** One of the following must happen:
+
+1.  **Handle It:** System debits Variant A (2.0) for Jan-Mar and credits Variant B (3.0) for Jan-Mar. **Net = 3.0 leaves/month.**
+2.  **Block It:** System validates configuration and prevents Variant B from crediting from DOJ if Variant A was active for the same period. **Variant B should credit from Confirmation Date only.**
+
+**✅ Pass Criteria:** Net leave balance for Jan-Mar should be **3.0 leaves/month** (Confirmed rate only).
+
+---
+
+### **Actual Behavior:**
+
+| Period | Variant A (Probation) | Variant B (Confirmed) | **Net Balance** |
+|--------|----------------------|----------------------|-----------------|
+| Jan - Mar | +2.0/month | +3.0/month | **5.0 leaves/month** ❌ |
+| April | -2.0 (debit) | +3.0 (credit) | **3.0 leaves** ✅ |
+
+**Issue:** Employee receives **both** variant credits for Jan-Mar (Double Accrual).
+
+---
+
+### **Status:** ❌ **FAILED**
+
+**Bug Raised:** Yes  
+**Bug Reference:** [Insert Bug ID Here]
+
+---
+
+### **Developer Feedback:**
+
+> "Such configuration is wrong in the real world scenario. Debit will happen only from the confirmation date, but credit should happen from accrual starts from."
+
+**Implication:** The current logic treats `AccrualStartsFrom = DOJ` as a retroactive benefit without reversing the previous variant, leading to financial liability.
+
+---
+
+### **Recommendation:**
+
+This scenario should be handled as either:
+1.  **Logic Fix:** Automatically debit previous variant for overlapping periods when new variant claims DOJ.
+2.  **Configuration Restriction:** Prevent tenants from configuring `AccrualStartsFrom = DOJ` on a Confirmed variant if a Probation variant exists for the same period.
 
 
 

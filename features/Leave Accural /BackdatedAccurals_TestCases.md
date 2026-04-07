@@ -774,6 +774,222 @@ This scenario should be handled as either:
 1.  **Logic Fix:** Automatically debit previous variant for overlapping periods when new variant claims DOJ.
 2.  **Configuration Restriction:** Prevent tenants from configuring `AccrualStartsFrom = DOJ` on a Confirmed variant if a Probation variant exists for the same period.
 
+   ```json
+"LeaveAccrued": [
+                {
+                    "AccrualDescription": "Leave added for 1753986600000 and 1756664999999",
+                    "TransactionDescription": "Leave added for 1753986600000 and 1756664999999",
+                    "Transaction": 1775228906825,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1756664999999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1753986600000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1756665000000 and 1759256999999",
+                    "TransactionDescription": "Leave added for 1756665000000 and 1759256999999",
+                    "Transaction": 1775228906850,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1759256999999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1756665000000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1759257000000 and 1761935399999",
+                    "TransactionDescription": "Leave added for 1759257000000 and 1761935399999",
+                    "Transaction": 1775228906893,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1761935399999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1759257000000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1761935400000 and 1764527399999",
+                    "TransactionDescription": "Leave added for 1761935400000 and 1764527399999",
+                    "Transaction": 1775228906915,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1764527399999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1761935400000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1764527400000 and 1767205799999",
+                    "TransactionDescription": "Leave added for 1764527400000 and 1767205799999",
+                    "Transaction": 1775228906944,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1767205799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1764527400000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1767205800000 and 1769884199999",
+                    "TransactionDescription": "Leave added for 1767205800000 and 1769884199999",
+                    "Transaction": 1775228906965,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1769884199999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1767205800000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1769884200000 and 1772303399999",
+                    "TransactionDescription": "Leave added for 1769884200000 and 1772303399999",
+                    "Transaction": 1775228906985,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1772303399999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1769884200000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1772303400000 and 1774981799999",
+                    "TransactionDescription": "Leave added for 1772303400000 and 1774981799999",
+                    "Transaction": 1775228907025,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1774981799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1772303400000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "TransactionDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "Transaction": 1775228907050,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1777573799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1774981800000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1761935400000 and 1764527399999",
+                    "TransactionDescription": "Leave added for 1761935400000 and 1764527399999",
+                    "Transaction": 1775536059984,
+                    "LeavesAccrued": 3.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1764527399999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1761935400000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1764527400000 and 1767205799999",
+                    "TransactionDescription": "Leave added for 1764527400000 and 1767205799999",
+                    "Transaction": 1775536060039,
+                    "LeavesAccrued": 3.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1767205799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1764527400000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1767205800000 and 1769884199999",
+                    "TransactionDescription": "Leave added for 1767205800000 and 1769884199999",
+                    "Transaction": 1775536060129,
+                    "LeavesAccrued": 3.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1769884199999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1767205800000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1769884200000 and 1772303399999",
+                    "TransactionDescription": "Leave added for 1769884200000 and 1772303399999",
+                    "Transaction": 1775536060219,
+                    "LeavesAccrued": 3.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1772303399999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1769884200000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1772303400000 and 1774981799999",
+                    "TransactionDescription": "Leave added for 1772303400000 and 1774981799999",
+                    "Transaction": 1775536060287,
+                    "LeavesAccrued": 3.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1774981799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1772303400000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "TransactionDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "Transaction": 1775536060344,
+                    "LeavesAccrued": 3.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1777573799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1774981800000,
+                    "LeaveCategory": "SL"
+                }
+            ]
+
+```
+
 
 
 

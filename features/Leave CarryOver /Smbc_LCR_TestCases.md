@@ -725,7 +725,106 @@ For Each Leave Type, Verify:
 
 ---
 
-> 🎯 **Bottom Line**:  
-> Test all 3 leave types separately first, then test combined scenario. Verify via **getData** (backend) AND **Leave Balance Card** (UI). Document any mismatches as bugs!
+```json
+{
+  "function": "getData",
+  "expression": "[KOZ5S^TRN^25064^*^A^*^*^1775024592123],[],[Header^Fields],[0^50]"
+}
 
-**Ready to execute?** Start with TC-SL-01 (simplest - all lapse), then TC-CL-01 (1 carry), then TC-PL-01 (all carry)! 😊
+
+{
+    "ReturnData": [
+        {
+            "Fields": {
+                "TransactionType": "A",
+                "Description": "Lapsing of excess Casual leave LC [ Smbc ] at the end of the 2025 Leave Year",
+                "LeaveYearLeavesPenalised": 0,
+                "CarryoverBalance": 4,
+                "BroughtOverLeavesEncashed": 0,
+                "LeaveYearLeavesEncashed": 8,
+                "LeaveType": 1774941072901,
+                "LeaveYearLeavesAdded": 0,
+                "LeaveYearLeavesAvailed": 0,
+                "LeaveYearLeavesDeducted": 0,
+                "LeaveYearLeavesLapsed": 0,
+                "UnusedBalance": 18,
+                "LeaveName": "Casual leave LC [ Smbc ]",
+                "LeaveYearFrom": 1753986600000,
+                "LeaveYearTill": 1785522599999,
+                "LeaveYearLeavesAccrued": 18,
+                "BroughtOverBalance": 0,
+                "BroughtOverLeavesLapsed": 6,
+                "CarryoverDate": 1785522599999
+            },
+            "Header": {
+                "Status": "A",
+                "FeatureVariantID": 1774941633189,
+                "SubjectUser": 1775024592123,
+                "ModuleName": "LnA",
+                "DocumentID": "KOZ5S:TRN:25064:1774941633189:1775540202292:001",
+                "DocumentType": "TRN",
+                "FeatureName": "Leave Carryover",
+                "TransactionID": 1775540202292,
+                "InitiatedOn": 1775540202292,
+                "FeatureID": "25064",
+                "ModuleID": "25",
+                "TenantID": "KOZ5S",
+                "MenuOption": "25064",
+                "Version": "001",
+                "UpdatedOn": null,
+                "CreatedOn": 1775540202292
+            }
+        }
+    ]
+}
+
+```
+
+```json
+{
+    "Mode": "UALB",
+    "Tenant": "KOZ5S",
+    "User": "1775024592123",
+    "Feature": "25053",
+    "FromDay": "AD",
+    "TillDay": "AD",
+    "AsOn":"1786041000000"
+},
+
+{
+            "FeatureVariantID": 1774941543504,
+            "LeavesEncashed": [],
+            "LeavePenalties": [],
+            "BroughtOverLeavesEncashed": 0.0,
+            "LeaveYearLeavesEncashed": 0.0,
+            "LeaveType": 1774941072901,
+            "CurrentBalance": 4.0,
+            "LeaveYearLeavesAvailed": 0.0,
+            "LeavesAvailed": [],
+            "ExpectedYearEndBalance": 4.0,
+            "UnusedBalance": 18.0,
+            "LeaveYearTill": 1817058599999,
+            "LeaveShortName": "",
+            "MaximumCarryForward": 4.0,
+            "CarryoverBalance": 4.0,
+            "LeaveYearLeavesPenalised": 0.0,
+            "YetToAccrue": 0.0,
+            "LeaveYearLeavesAdded": 0.0,
+            "EncashableBalanceToday": 0.0,
+            "LeavesAdjustments": [],
+            "YearStartBalance": 4.0,
+            "LeaveYearLeavesDeducted": 0.0,
+            "LeaveCategory": "AL",
+            "LeaveYearLeavesLapsed": 0.0,
+            "LeaveName": "Casual leave LC [ Smbc ]",
+            "LeaveCreditBasis": "A",
+            "LeaveAccrued": [],
+            "LeaveYearFrom": 1785522600000,
+            "BroughtOverBalance": 0.0,
+            "BroughtOverLeavesLapsed": 6.0,
+            "EncashableBalanceAtYearEnd": 0.0
+        }
+
+```
+<img width="1293" height="907" alt="image" src="https://github.com/user-attachments/assets/5ebe27d4-9198-4ee9-8949-1973e480a6bd" />
+

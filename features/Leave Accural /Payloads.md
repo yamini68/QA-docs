@@ -1,3 +1,7 @@
+
+Backdated Confirmation - Variant Transition Debit for Effective Month
++76,+77 - used for emails both have incorect accurals
+
 ```json
  "LeaveAccrued": [
                 {

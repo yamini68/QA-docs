@@ -108,7 +108,10 @@ For each transaction in the `LeaveAccrued` array, verify:
 5. AccrualTill dates align with calendar month ends
 6. System used **LegalEntityJoiningDate** for calculations
 
-   ``` json
+<details>
+<summary>Click to expand JSON</summary>
+
+   ```json
    "LeaveAccrued": [
                 {
                     "AccrualDescription": "Leave added for 1753986600000 and 1756664999999",
@@ -237,7 +240,9 @@ For each transaction in the `LeaveAccrued` array, verify:
                     "LeaveCategory": "SL"
                 }
             ]
-   ```
+```
+ 
+</details> 
 
 ---
 

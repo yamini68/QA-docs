@@ -1640,7 +1640,106 @@ Verify that when an employee is confirmed prospectively (future date), the syste
 
 **Conclusion:** Prospective confirmation with different `AccrualStartsFrom` configurations (DOJ for Probation, DOC for Confirmed) works correctly. System only reverses current month accruals, not previous months.
 
+## **Test Case #8: Prospective Confirmation - Future Date (Pending Execution)**
 
+---
+
+### **Test Objective:**
+Verify that when an employee's confirmation date is in the **future** (May 1, 2026), the system correctly handles variant transition from Probation (`AccrualStartsFrom = DOJ`) to Confirmed (`AccrualStartsFrom = DOC`) without creating debits for previous months.
+
+---
+
+### **Test Configuration:**
+
+| Field | **Variant A (Probation)** | **Variant B (Confirmed)** |
+|-------|--------------------------|--------------------------|
+| **Applicability** | Confirmation Status: 0 | Confirmation Status: 1 |
+| **AccrualStartsFrom** | **DOJ** | **DOC** |
+| **PeriodLeaveDays** | 24 days/year (2.0/month) | 36 days/year (3.0/month) |
+| **CreditAt** | S (Start) | S (Start) |
+
+---
+
+### **Test Data:**
+
+| Field | Value |
+|-------|-------|
+| **Employee Email** | yaminianala99+**79**@gmail.com |
+| **DOJ** | August 1, 2025 |
+| **Probation Duration** | **9 Months** |
+| **Probation End Date** | April 30, 2026 |
+| **Confirmation Effective Date** | **May 1, 2026** (Future) |
+| **Current Date** | April 1, 2026 |
+| **Status** | ⏳ Pending (waiting for May 1, 2026) |
+
+---
+
+### **Expected Behavior:**
+
+| Period | Variant | Transaction Type | Amount | Debit Expected? |
+|--------|---------|-----------------|--------|-----------------|
+| **Aug 2025 - Apr 2026** | A (Probation) | Credit | +2.0/month | ❌ NO |
+| **May 2026 onwards** | B (Confirmed) | Credit | +3.0/month | ❌ NO |
+
+**Note:** May 2026 may have a debit (-2.0) if `CreditAt = 'S'` credits Variant A at month start before confirmation takes effect.
+
+---
+
+### **Expected Balance (Till April 2026):**
+
+| Period | Calculation | Total |
+|--------|-------------|-------|
+| Aug 2025 - Apr 2026 | 9 months × 2.0 | **18.0 leaves** |
+| May 2026 onwards | Pending (future) | TBD |
+
+---
+
+### **Verification Checklist (After May 1, 2026):**
+
+```
+□ Aug-Apr 2026: Variant A credits only (2.0/month) = 18.0 leaves
+□ May 2026: Variant A debit (-2.0) + Variant B credit (+3.0) = 3.0 leaves
+□ NO debits for Aug-Apr 2026 (probation period - no overlap)
+□ Variant B credits start from May 1, 2026 (DOC)
+□ UserAccrual.Status for Variant A: 'Inactive' from May 1, 2026
+□ UserAccrual.Status for Variant B: 'Active' from May 1, 2026
+□ No double accrual for any period
+```
+
+---
+
+### **Test Execution Timeline:**
+
+| Date | Action | Status |
+|------|--------|--------|
+| **Aug 1, 2025** | Employee created (DOJ) | ✅ Completed |
+| **Aug 2025 - Apr 2026** | Variant A accruals run | ✅ Completed |
+| **April 1, 2026** | Test case created | ✅ Completed |
+| **May 1, 2026** | Confirmation effective | ⏳ **Pending** |
+| **May 2, 2026 onwards** | Verify transactions & balance | ⏳ **Pending** |
+
+---
+
+### **Why This Test is Important:**
+
+| Reason | Impact |
+|--------|--------|
+| **Future-dated confirmation** | Validates system handles prospective events correctly |
+| **Different AccrualStartsFrom** | Confirms DOJ vs DOC logic works for variant transition |
+| **No backdated debits** | Ensures clean transition without reversing past months |
+| **Real-world scenario** | Most confirmations happen prospectively, not backdated |
+
+---
+
+### **Test Status:** ⏳ **PENDING EXECUTION**
+
+**Dependency:** Wait until **May 1, 2026** for confirmation to take effect, then verify transactions.
+
+**Next Action:** On May 1, 2026, trigger accrual processing and verify:
+1. Variant A debits for May 2026 (if applicable)
+2. Variant B credits from May 2026 onwards
+3. No debits for Aug-Apr 2026
+4. Final balance calculation
 
 
 

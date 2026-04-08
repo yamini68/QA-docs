@@ -990,7 +990,7 @@ This scenario should be handled as either:
 
 ```
 
-## **Test Summary: Backdated Confirmation - Variant Transition with Debit Logic. Mixed Variant Transition (DOJ + DOC)**
+## **Test Case - 6 Summary: Backdated Confirmation - Variant Transition with Debit Logic. Mixed Variant Transition (DOJ + DOC)**
 
 ---
 

@@ -1389,9 +1389,256 @@ Verify that when an employee moves from Probation to Confirmed status with backd
 
 ### **Conclusion:**
 
-**Test Case #8: Mixed Variant Transition (DOJ + DOC)** is now **✅ PASSED** after developer fixes. The system correctly handles backdated confirmation with variant transitions, debit transactions, and prevents double accrual.
+**Test Case : Mixed Variant Transition (DOJ + DOC)** is now **✅ PASSED** after developer fixes. The system correctly handles backdated confirmation with variant transitions, debit transactions, and prevents double accrual.
 
-**Test Status:** ✅ **COMPLETED**  
+**Test Status:** ✅ **COMPLETED** 
+
+## **Test Case #7: Prospective Confirmation - Variant Transition with Different AccrualStartsFrom**
+
+---
+
+### **Test Objective:**
+Verify that when an employee is confirmed prospectively (future date), the system correctly transitions from Probation variant (`AccrualStartsFrom = DOJ`) to Confirmed variant (`AccrualStartsFrom = DOC`) without creating debits for previous months.
+
+---
+
+### **Test Configuration:**
+
+| Field | **Variant A (Probation)** | **Variant B (Confirmed)** |
+|-------|--------------------------|--------------------------|
+| **Applicability** | Confirmation Status: 0 | Confirmation Status: 1 |
+| **AccrualStartsFrom** | **DOJ** | **DOC** |
+| **PeriodLeaveDays** | 24 days/year (2.0/month) | 36 days/year (3.0/month) |
+| **CreditAt** | S (Start) | S (Start) |
+
+---
+
+### **Test Data:**
+
+| Field | Value |
+|-------|-------|
+| **Employee Email** | yaminianala99+**79**@gmail.com |
+| **DOJ** | August 1, 2025 |
+| **Probation Duration** | 8 Months |
+| **Probation End Date** | March 31, 2026 |
+| **Confirmation Effective Date** | **April 1, 2026** (Prospective) |
+| **Current Date** | April 1, 2026 |
+
+---
+
+### **Expected Behavior:**
+
+| Period | Variant | Transaction Type | Amount |
+|--------|---------|-----------------|--------|
+| **Aug 2025 - Mar 2026** | A (Probation) | Credit | +2.0/month |
+| **Apr 2026** | A (Probation) | Debit | -2.0 (reversal) |
+| **Apr 2026** | B (Confirmed) | Credit | +3.0/month |
+
+**Note:** April debit occurs because `CreditAt = 'S'` credited Variant A at month start, then confirmation reversed it.
+
+---
+
+### **Test Results:**
+
+| Period | Variant A | Debit | Variant B | **Net** | Status |
+|--------|-----------|-------|-----------|---------|--------|
+| Aug 2025 - Mar 2026 | +16.0 (8 months) | 0 | 0 | **16.0** | ✅ Pass |
+| Apr 2026 | +2.0 | -2.0 | +3.0 | **3.0** | ✅ Pass |
+| **Total Balance** | **18.0** | **-2.0** | **3.0** | **19.0** | ✅ **Pass** |
+
+---
+
+### **Key Verification Points:**
+
+```
+✅ No debits for Aug-Mar 2026 (probation period - no overlap)
+✅ Only April 2026 has debit (current month reversal due to CreditAt = 'S')
+✅ Variant B credits start from confirmation date (DOC = Apr 1, 2026)
+✅ No double accrual for any period
+✅ Total balance correct: 19.0 leaves
+```
+
+---
+
+### **Comparison with Backdated Confirmation (TC8):**
+
+| Aspect | TC8 (Backdated) | TC9 (Prospective) |
+|--------|-----------------|-------------------|
+| **Confirmation Date** | Nov 1, 2025 (past) | Apr 1, 2026 (current) |
+| **AccrualStartsFrom (Variant B)** | DOC | DOC |
+| **Debits Required** | 6 months (Nov-Apr) | 1 month (Apr only) |
+| **Total Balance** | 24.0 leaves | 19.0 leaves |
+| **Status** | ✅ Passed (after fix) | ✅ Passed |
+
+---
+
+### Json Payload:
+<details>
+<summary>Click to expand JSON</summary>
+
+```json
+"LeaveAccrued": [
+                {
+                    "AccrualDescription": "Leave added for 1753986600000 and 1756664999999",
+                    "TransactionDescription": "Leave added for 1753986600000 and 1756664999999",
+                    "Transaction": 1775630612806,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1756664999999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1753986600000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1756665000000 and 1759256999999",
+                    "TransactionDescription": "Leave added for 1756665000000 and 1759256999999",
+                    "Transaction": 1775630612839,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1759256999999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1756665000000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1759257000000 and 1761935399999",
+                    "TransactionDescription": "Leave added for 1759257000000 and 1761935399999",
+                    "Transaction": 1775630612904,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1761935399999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1759257000000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1761935400000 and 1764527399999",
+                    "TransactionDescription": "Leave added for 1761935400000 and 1764527399999",
+                    "Transaction": 1775630612961,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1764527399999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1761935400000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1764527400000 and 1767205799999",
+                    "TransactionDescription": "Leave added for 1764527400000 and 1767205799999",
+                    "Transaction": 1775630613124,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1767205799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1764527400000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1767205800000 and 1769884199999",
+                    "TransactionDescription": "Leave added for 1767205800000 and 1769884199999",
+                    "Transaction": 1775630613196,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1769884199999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1767205800000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1769884200000 and 1772303399999",
+                    "TransactionDescription": "Leave added for 1769884200000 and 1772303399999",
+                    "Transaction": 1775630613361,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1772303399999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1769884200000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1772303400000 and 1774981799999",
+                    "TransactionDescription": "Leave added for 1772303400000 and 1774981799999",
+                    "Transaction": 1775630613426,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1774981799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1772303400000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "TransactionDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "Transaction": 1775630613486,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1777573799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1774981800000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "TransactionDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "Transaction": 1775630834479,
+                    "LeavesAccrued": -2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1777573799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1774981800000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "TransactionDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "Transaction": 1775630834555,
+                    "LeavesAccrued": 3.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1777573799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1774981800000,
+                    "LeaveCategory": "SL"
+                }
+            ]
+```
+</details> 
+
+### **Test Status:** ✅ **PASSED**
+
+**Conclusion:** Prospective confirmation with different `AccrualStartsFrom` configurations (DOJ for Probation, DOC for Confirmed) works correctly. System only reverses current month accruals, not previous months.
 
 
 

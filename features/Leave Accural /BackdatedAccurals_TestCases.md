@@ -108,6 +108,7 @@ For each transaction in the `LeaveAccrued` array, verify:
 5. AccrualTill dates align with calendar month ends
 6. System used **LegalEntityJoiningDate** for calculations
 
+### Json Paylod
 <details>
 <summary>Click to expand JSON</summary>
 
@@ -538,6 +539,7 @@ The system created **9 monthly transactions**, all within the **current leave ye
 | LeaveYearEntityId | Split across 2 leave years | ✅ All in current leave year | ✅ Pass (given env) |
 | Total Balance | ~19.0 leaves | ✅ 18.0 leaves | ✅ Pass (given env) |
 
+### Json Payload
 <details>
 <summary>Click to expand JSON</summary>
 
@@ -783,6 +785,7 @@ This scenario should be handled as either:
 1.  **Logic Fix:** Automatically debit previous variant for overlapping periods when new variant claims DOJ.
 2.  **Configuration Restriction:** Prevent tenants from configuring `AccrualStartsFrom = DOJ` on a Confirmed variant if a Probation variant exists for the same period.
 
+### Json Payload
    <details>
 <summary>Click to expand JSON</summary>
 
@@ -1055,6 +1058,7 @@ Verify that when an employee moves from Probation to Confirmed status with backd
 | Nov 2025 - Apr 2026 | +2.0/month | **-2.0** | +3.0/month | **3.0** |
 | **Total** | 18.0 | **-12.0** | 18.0 | **24.0** ✅ |
 
+### Json Payload
 <details>
 <summary>Click to expand JSON</summary>
 

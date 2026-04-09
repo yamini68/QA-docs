@@ -2039,6 +2039,167 @@ Total Transactions: 12
 
 **Conclusion:** Normal accrual processing continues to work correctly after backdated confirmation logic implementation. The Kafka-triggered May 2026 accrual was processed successfully with the correct variant (Confirmed) and amount (3.0 leaves). **No regression detected.**
 
+## **Test Case #10: Same Month Current Joining & Confirmation
+
+---
+
+### **Test Objective:**
+Verify variant transition when employee joins and gets confirmed in the current month (April 2026) - prospective scenario
+
+---
+
+### **Test Configuration:**
+
+| Field | **Variant A (Probation)** | **Variant B (Confirmed)** |
+|-------|--------------------------|--------------------------|
+| **Applicability** | Confirmation Status: 0 | Confirmation Status: 1 |
+| **AccrualStartsFrom** | DOJ | DOC |
+| **PeriodLeaveDays** | 24 days/year (2.0/month) | 36 days/year (3.0/month) |
+| **CreditAt** | S (Start) | S (Start) |
+| **ProratedAccrual** | Yes (PA) | Yes (PA) |
+
+---
+
+### **Test Data:**
+
+| Field | Value |
+|-------|-------|
+| **Employee Email** | yaminianala99+**84**@gmail.com |
+| **DOJ** | April 1, 2026 |
+| **Probation Duration** | 4 Days |
+| **Probation Till** | April 5, 2026 |
+| **Confirmation Effective** | April 6, 2026 |
+| **Current Date** | April 2026 |
+
+---
+
+### **Test Steps:**
+
+1. Create employee with DOJ = April 1, 2026 (Status: Unconfirmed)
+2. System credits Variant A for April 2026 (+2.0 leaves) at month start
+3. Employee completes 4-day probation on April 5, 2026
+4. Confirm employee effective April 6, 2026
+5. Trigger accrual processing
+6. Verify prorated calculations in LeaveAccrued
+
+---
+
+### **Expected Calculation:**
+
+**April 2026: 30 days total**
+
+| Period | Days | Variant | Calculation | Amount |
+|--------|------|---------|-------------|--------|
+| **Apr 1-5** | 5 days | A (Probation) | 2.0 × (5/30) | **0.33 leaves** |
+| **Apr 6-30** | 25 days | B (Confirmed) | 3.0 × (25/30) | **2.5 leaves** |
+| **Total April** | 30 days | | | **2.83 leaves** |
+
+**With CreditAt = 'S':**
+- Initial credit: +2.0 (Variant A full month)
+- Debit Variant A (Apr 6-30): -2.0 × (25/30) = **-1.67**
+- Credit Variant B (Apr 6-30): +3.0 × (25/30) = **+2.5**
+- **Net:** 2.0 - 1.67 + 2.5 = **2.83 leaves**
+
+---
+
+### **Actual Result:**
+
+| Transaction | Period | LeavesAccrued | Type | Status |
+|------------|--------|---------------|------|--------|
+| 1 | Apr 1-30 | +2.0 | Variant A Credit | ✅ Correct |
+| 2 | Apr 6-30 | -1.7 | Variant A Debit | ✅ Correct (rounded) |
+| 3 | Apr 6-30 | +2.5 | Variant B Credit | ✅ Correct |
+| **Net Balance** | Apr 1-30 | **2.8** | **Total** | ✅ **Pass** |
+
+---
+### Json Payload
+<details>
+   <summary>
+      View Json Paylod
+   </summary>
+
+   ```json
+ "LeaveAccrued": [
+                {
+                    "AccrualDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "TransactionDescription": "Leave added for 1774981800000 and 1777573799999",
+                    "Transaction": 1775718428230,
+                    "LeavesAccrued": 2.0,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1777573799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1774981800000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1775413800000 and 1777573799999",
+                    "TransactionDescription": "Leave added for 1775413800000 and 1777573799999",
+                    "Transaction": 1775718705275,
+                    "LeavesAccrued": -1.7,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1777573799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1775413800000,
+                    "LeaveCategory": "SL"
+                },
+                {
+                    "AccrualDescription": "Leave added for 1775413800000 and 1777573799999",
+                    "TransactionDescription": "Leave added for 1775413800000 and 1777573799999",
+                    "Transaction": 1775718705353,
+                    "LeavesAccrued": 2.5,
+                    "LeaveType": 1772519659735,
+                    "LeaveName": "Sick Leave [ staging ]",
+                    "LeaveYearFrom": 1753986600000,
+                    "LeaveYearTill": 1785522599999,
+                    "AccrualTill": 1777573799999,
+                    "LeaveShortName": "",
+                    "AccrualFrom": 1775413800000,
+                    "LeaveCategory": "SL"
+                }
+            ]
+```
+</details>
+
+### **Verification:**
+
+```
+✅ Prorated calculation for probation period (5 days): 
+   Initial 2.0 - Debit 1.7 = 0.3 leaves (≈ 2.0 × 5/30 = 0.33)
+
+✅ Prorated calculation for confirmed period (25 days):
+   3.0 × 25/30 = 2.5 leaves ✅
+
+✅ Total April accrual: 0.3 + 2.5 = 2.8 leaves ✅
+
+✅ Debit created for Variant A from confirmation date (Apr 6)
+
+✅ No double accrual for overlapping period
+
+✅ Rounding applied correctly (1.67 → 1.7)
+```
+
+---
+
+### **Key Findings:**
+
+| Aspect | Result |
+|--------|--------|
+| Short probation period (4 days) handled correctly | ✅ Pass |
+| Prorated accrual for partial periods | ✅ Pass |
+| Variant transition within same month | ✅ Pass |
+| Debit calculation for overlapping period | ✅ Pass |
+| Rounding logic working correctly | ✅ Pass |
+
+---
+
+### **Test Status:** ✅ **PASSED**
+
 
 
 

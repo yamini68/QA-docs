@@ -120,3 +120,52 @@ Same validations as Section 2, but applied to employees **leaving** mid-period.
 ---
 
 **Priority order for testing:** Section 2C (actual accrual correctness) → Section 3 (separation) → Section 1 (toggle behavior) → Section 7 (save/edge cases) → Sections 4–6 (supporting settings).
+
+
+
+
+## Test Combinations with DOJ, Confirmation Date and Probation Period
+
+Slab 1 = Day 1–15 → 1.75 days (rounds to 1.8)
+Slab 2 = Day 16–31 → 1 day
+
+---
+
+| # | Start Accruing After | Accrued Leaves Start From | DOJ | Probation Period | Confirmation Date | Slab That Should Fire | Expected Accrual |
+|---|---------------------|--------------------------|-----|-----------------|-------------------|----------------------|-----------------|
+| 1 | 0 Days after Joining Date | Joining Date | 2nd April | — | — | Slab 1 (Day 2) | **1.8 days** ✅ Already tested |
+| 2 | 0 Days after Joining Date | Joining Date | 20th April | — | — | Slab 2 (Day 20) | **1.0 day** ✅ Already tested |
+| 3 | 0 Days after Joining Date | Date of Confirmation | 2nd April | 15 days | 17th April | Slab 2 (Day 17) | **1.0 day** |
+| 4 | 0 Days after Joining Date | Date of Confirmation | 2nd April | 10 days | 12th April | Slab 1 (Day 12) | **1.8 days** |
+| 5 | 0 Days after Date of Confirmation | Date of Confirmation | 2nd April | 15 days | 17th April | Slab 2 (Day 17) | **1.0 day** |
+| 6 | 0 Days after Date of Confirmation | Date of Confirmation | 5th April | 8 days | 13th April | Slab 1 (Day 13) | **1.8 days** |
+| 7 | 30 Days after Joining Date | Joining Date | 2nd April | — | — | Slab 1 (Day 2 of May) | **1.8 days** (fires in May not April) |
+| 8 | 30 Days after Date of Confirmation | Date of Confirmation | 2nd April | 15 days | 17th April | Slab 2 (Day 17 of May) | **1.0 day** (fires in May) |
+
+---
+
+## Key Combination to Focus On (Most Critical)
+
+**Test 3 and Test 4** — DOJ and Confirmation fall in **different slabs:**
+
+> Test 3: DOJ Day 2 (Slab 1) but Confirmation Day 17 (Slab 2)
+> Since "Accrued Leaves start from = Confirmation Date"
+> System should fire Slab 2 → **1.0 day**
+> If it gives 1.8 days → system is wrongly using DOJ instead of Confirmation Date 🐛
+
+---
+
+## Probation Period to Set
+
+| Test # | Probation Days to Set in Policy |
+|--------|--------------------------------|
+| 3 | **15 days** |
+| 4 | **10 days** |
+| 5 | **15 days** |
+| 6 | **8 days** |
+| 7 | No probation needed |
+| 8 | **15 days** |
+
+---
+
+Want me to also add the UALB expected values and JSON verification points for each of these?
